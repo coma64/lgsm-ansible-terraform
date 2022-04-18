@@ -1,0 +1,2 @@
+lgsm_user: 'gsm'
+games_dir: '/home/{{ lgsm_user }}/games'

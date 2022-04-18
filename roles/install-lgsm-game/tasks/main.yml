@@ -1,0 +1,41 @@
+- name: Get server script
+  command:
+    cmd: "./linuxgsm.sh {{ game }}"
+    chdir: "/home/{{ lgsm_user }}"
+    creates: "/home/{{ lgsm_user }}/{{ game }}"
+
+- name: Create {{ game }} directory
+  file:
+    path: "{{ games_dir }}/{{ game }}"
+    state: directory
+
+- name: Move {{ game }} script into {{ game }} directory
+  command:
+    cmd: "mv /home/{{ lgsm_user }}/{{ game }} {{ games_dir }}/{{ game }}"
+    creates: "{{ games_dir }}/{{ game }}/{{ game }}"
+    removes: "/home/{{ lgsm_user }}/{{ game }}"
+      
+- name: Install via {{ game }} script
+  register: install
+  failed_when: "install.rc not in [0, 1]"
+  shell:
+    cmd: "autoinstall=yes ./{{ game }} install"
+    chdir: "{{ games_dir }}/{{ game }}"
+    creates: "{{ games_dir }}/{{ game }}/serverfiles"
+
+- name: Install missing dependencies
+  become: true
+  when: install.rc == 1
+
+  register: dependencies_install
+  failed_when: dependencies_install.rc != 3
+  shell:
+    cmd: "autoinstall=yes ./{{ game }} install"
+    chdir: "{{ games_dir }}/{{ game }}"
+
+- name: Complete install
+  when: install.rc == 1
+
+  shell:
+    cmd: "autoinstall=yes ./{{ game }} install"
+    chdir: "{{ games_dir }}/{{ game }}"

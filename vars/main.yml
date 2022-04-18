@@ -1,0 +1,4 @@
+security_sudoers_passwordless:
+  - azure
+
+security_ssh_port: 17991

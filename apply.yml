@@ -1,0 +1,63 @@
+- name: Create server
+  hosts: localhost
+
+  vars_files:
+    - vars/main.yml
+  tasks:
+    - name: Apply terraform
+      community.general.terraform:
+        project_path: "./"
+      register: terraform
+
+    - name: Add host
+      add_host:
+        name: "azure@{{ terraform.outputs['public_ip']['value'] }}"
+
+    - name: SSH connection info
+      debug:
+        msg: "azure@{{ terraform.outputs['public_ip']['value'] }}:{{ security_ssh_port }}"
+
+- name: Basic configuration
+  hosts: all
+  become: true
+
+  vars_files:
+    - vars/main.yml
+  roles:
+    - geerlingguy.security
+
+  tasks:
+    - name: Install dependencies
+      become: true
+      apt:
+        update_cache: yes
+        pkg:
+          - acl
+          - cloud-utils
+
+    - name: Execute growpart
+      become: true
+      ignore_errors: yes
+      command: growpart /dev/sda 1
+
+    - name: Execute resize2fs
+      become: true
+      command: resize2fs /dev/sda1
+
+- name: Install linux gsm
+  hosts: all
+  roles:
+    - common
+
+- name: Interactive lgsm game install
+  hosts: all
+
+  vars_prompt:
+    - name: game
+      prompt: Which game do you want to install? Empty to skip
+      private: false
+  roles:
+    - name: install-lgsm-game
+      when: game
+      become: yes
+      become_user: gsm

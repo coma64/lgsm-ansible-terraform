@@ -1,0 +1,45 @@
+- name: Install deps
+  become: true
+  apt:
+    pkg:
+      - curl
+      - wget
+      - file
+      - tar
+      - bzip2
+      - gzip
+      - unzip
+      - bsdmainutils
+      - python3
+      - util-linux
+      - ca-certificates
+      - binutils
+      - bc
+      - jq
+      - tmux
+      - netcat
+      - lib32gcc1
+      - lib32stdc++6
+
+- name: Create lgsm user
+  become: true
+  user:
+    name: "{{ lgsm_user }}"
+    shell: /bin/bash
+
+- name: Create games directory
+  become: true
+  become_user: "{{ lgsm_user }}"
+
+  file:
+    path: "{{ games_dir }}"
+    state: directory
+
+- name: Download lgsm
+  become: true
+  become_user: "{{ lgsm_user }}"
+
+  get_url:
+    url: https://linuxgsm.sh
+    dest: "/home/{{ lgsm_user }}/linuxgsm.sh"
+    mode: '0744'
